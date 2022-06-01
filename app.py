@@ -9,18 +9,6 @@ import matplotlib.pyplot as plt
 import filtertools as ft
 import sedpy.observate as sedobs
 
-# Todo
-# - Plot axes and labels
-# - Photometry
-# - Fonts of labels
-# - Default line set
-# - Choose proper templates, e.g. AGN, dusty
-# - Absorption
-# - Normalize the templates
-# - Label the filters
-# - Mouseovers correct (line, filter etc)
-# - Log lambda
-
 Font = plotly.graph_objects.scatter.hoverlabel.Font
 
 # galaxy_loc = "galaxies"
