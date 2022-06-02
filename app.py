@@ -11,10 +11,13 @@ import sedpy.observate as sedobs
 
 Font = plotly.graph_objects.scatter.hoverlabel.Font
 
-# galaxy_loc = "galaxies"
-galaxy_loc = "https://github.com/gbrammer/eazy-photoz/tree/master/templates"
+galaxy_loc = "https://raw.githubusercontent.com/gbrammer/eazy-photoz/master/templates"
 
-templates = {"Star-forming": f"{galaxy_loc}/EAZY_v1.0/eazy_v1.0_sed2.dat", "Quiescent": f"{galaxy_loc}/EAZY_v1.0/eazy_v1.0_sed5.dat"}
+@st.cache
+def get_templates():
+    templates = pd.read_csv("data/galaxies.csv", index_col="name")
+    return templates
+# templates = {"Star-forming": f"{galaxy_loc}/EAZY_v1.0/eazy_v1.0_sed2.dat", "Quiescent": f"{galaxy_loc}/EAZY_v1.0/eazy_v1.0_sed5.dat"}
 
 # @st.cache
 def load_filters_sedobs():
@@ -28,12 +31,17 @@ def load_filters_sedobs():
     # sedobs.load_filters(filters)
     return filters
 
+@st.cache
+def fetch_template(stype):
+    templates = get_templates() 
+    data = pd.read_csv(f"{galaxy_loc}/{templates.loc[stype]['template_file']}", names=["wl", "f"], sep='\s+')
+    return data
 
 @st.cache
 def load_spectrum(stype=None, index=None, redshift=0.0):
     if stype is None:
         return None
-    data = pd.read_csv(templates[stype], names=["wl", "f"], sep='\s+')
+    data = fetch_template(stype)
     wl = data['wl']
     spec = np.zeros((wl.shape[0], 2))
     spec[:, 0] = wl*(1+redshift)
@@ -45,7 +53,7 @@ def load_filters(filternames):
 
 @st.cache
 def load_lines():
-    lines = pd.read_csv("lines.csv")
+    lines = pd.read_csv("data/lines.csv")
     return lines
 
 @st.cache
@@ -116,7 +124,7 @@ def make_figure(spectrum, filters, lines=None, log=False, do_phot=False):
         obs_flux = spectrum[:, 1]*1e-18
         sedobs_filters = load_filters_sedobs()
         observed_magnitudes = sedobs.getSED(obs_wavelength, obs_flux, filterlist=sedobs_filters)
-return fig
+    return fig
 
 # Set up the app
 
@@ -131,7 +139,7 @@ show_lines = st.sidebar.checkbox("Show lines")
 photometry = st.sidebar.checkbox("Photometry")
 spectrum =  st.sidebar.selectbox(
     "Plot:",
-    ['Quiescent', 'Star-forming'] # m-star
+    get_templates().index.values
 )
 
 filters = st.sidebar.multiselect(

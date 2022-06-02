@@ -8,6 +8,7 @@ Clone the repo, then install the dependencies:
 
 Then `streamlit run app.py` and browse to http://localhost:5901 .
 
+The templates are from [EAZY](https://github.com/gbrammer/eazy-photoz) [Brammer, van Dokkum & Coppi (2008)](http://adsabs.harvard.edu/abs/2008ApJ...686.1503B).
 Todo:
 
 - Log lambda axis
