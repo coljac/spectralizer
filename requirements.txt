@@ -1,4 +1,4 @@
+plotly
 numpy
 pandas
 astro-sedpy
-plotly
