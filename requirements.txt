@@ -1,0 +1,4 @@
+numpy
+pandas
+astro-sedpy
+plotly

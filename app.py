@@ -64,9 +64,40 @@ def get_all_lines():
 def get_all_filters():
     return ft.get_all_filters()
 
+def ticks(lo, hi, steps=10):
+    delta = hi-lo
+    if delta > 20000:
+        step = 5000
+    elif delta > 6000:
+        step = 1000
+    elif delta > 1000:
+        step = 100
+    else:
+        step = 50 
+
+    tickvals = []
+    ticktext = []
+    # for i in np.linspace(lo, hi, steps):
+    for i in np.arange(lo, hi, step):
+        if i == lo or i == hi:
+            v = i
+        else:
+            v = np.round((i//1000))*1000
+        tickvals.append(v)
+        if v < 10000:
+            ticktext.append(f"{int(v)}Å")
+        else:
+            ticktext.append(f"{v/10000:.1f}μm")
+
+    return tickvals, ticktext
+
 # @st.cache
 def make_figure(spectrum, filters, lines=None, log=False, do_phot=False):
-    fig = px.line(x=spectrum[:, 0], y=spectrum[:, 1], width=1400, height=700)
+    fig = px.line(x=spectrum[:, 0], y=spectrum[:, 1], width=1400, height=700,
+    labels={
+                     "x": "Wavelength",
+                     "y": ""
+                 })
     fig.update_xaxes(range=[wavelength_min, wavelength_max])
     filter_profiles = load_filters(filters)
     filts = {}
@@ -76,6 +107,8 @@ def make_figure(spectrum, filters, lines=None, log=False, do_phot=False):
     for fname in filters:
         for i, loaded in enumerate(ft.load_filter(fname)):
             # loaded.data[:, 1]/=loaded.data[:, 1].max()
+            include = np.where(loaded.data[:, 1] > 0.001 )[0]
+            loaded.data = loaded.data[include, :]
             filts[loaded.name] = loaded
             fig.add_trace(
                 go.Scatter(x=loaded.data[:, 0], y=loaded.data[:, 1], text=loaded.name,
@@ -89,6 +122,14 @@ def make_figure(spectrum, filters, lines=None, log=False, do_phot=False):
             texts.append(loaded.name.split(".")[-1])
         fig.add_trace(go.Scatter(x=xs, y=ys, text=texts, textposition="bottom center", mode="text"))#, name="labels" ) 
 
+    tickvals, ticktext = ticks(wavelength_min, wavelength_max, steps=12)
+    fig.update_layout(
+    xaxis = dict(
+        tickmode = 'array',
+        tickvals = tickvals,
+        ticktext = ticktext
+        )
+    )
 
     if show_lines:
         wls = []
@@ -128,7 +169,7 @@ def make_figure(spectrum, filters, lines=None, log=False, do_phot=False):
 
 # Set up the app
 
-st.title('Galaxy redshifter')
+# st.title('Galaxy redshifter')
 
 wavelength_min = st.sidebar.slider("WL start", min_value=0, max_value=20000, value=1000, step=1000)
 wavelength_max = st.sidebar.slider("WL end", min_value=5000, max_value=100000, value=10000, step=5000)
